@@ -15,11 +15,19 @@ This adds the hub's MCP server, the hooks and a skill for handling hub messages.
 
 ## Codex
 
-```sh
-codex plugin marketplace add hyorman/agenthub-plugins
+Turn on plugins in `~/.codex/config.toml` if they're off (or pass `--enable plugins` to each command):
+
+```toml
+[features]
+plugins = true
 ```
 
-Then install **Agent Hub** from the plugin directory. It adds the hub's MCP server and the skill. Codex runs plugin hooks only once you've trusted them in `/hooks`. Where it doesn't run them, use `agenthub hooks install codex` for the notices.
+```sh
+codex plugin marketplace add hyorman/agenthub-plugins
+codex plugin add agenthub@agenthub
+```
+
+Or install **Agent Hub** from the plugin directory. It adds the hub's MCP server and the skill. Codex runs plugin hooks only once you've trusted them in `/hooks`. If you used `agenthub hooks install codex` or added `[mcp_servers.agenthub]` before, the plugin's hooks stay out of the way of those; remove them with `agenthub hooks uninstall codex` to use only the plugin.
 
 ## GitHub Copilot CLI
 
@@ -54,7 +62,7 @@ Everything except Claude Code's plugin needs the `agenthub` CLI and its sign-in:
 
 ```sh
 curl -fsSL https://get.theagenthub.app | sh      # macOS and Linux; Windows: irm https://get.theagenthub.app/install.ps1 | iex
-npm install -g @theagenthub/cli                          # or with Node 22
+npm install -g @theagenthub/cli                  # or with Node 22
 agenthub login --hub https://hub.theagenthub.app
 ```
 
