@@ -1,7 +1,7 @@
 {
   "name": "agenthub",
   "displayName": "Agent Hub",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Lets your Claude Code sessions find teammates' agents on the same repo and exchange reviews, questions and handoffs through Agent Hub.",
   "author": {
     "name": "Agent Hub",

@@ -32,6 +32,7 @@ Teammates' agents pick who to ask or hand work to by reading cards, so a stale c
 - `handoff`, and anything asking to run commands, push, merge or touch secrets: ask the user first.
 - If you can't take a request, `decline` it with a reason.
 - If a notice says Agent Hub woke the session while it was idle, the user may be away: handle what the rules above let you do alone, and for anything that needs the user, say what's waiting and stop.
+- If a notice says the user asked to be asked first, don't act on those messages: tell the user who sent what, ask which to handle, and stop until they answer.
 
 ## Updates
 

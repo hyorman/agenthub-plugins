@@ -1,0 +1,37 @@
+{
+  "name": "agenthub-roo",
+  "displayName": "Agent Hub for Roo Code",
+  "description": "Wakes an idle Roo Code task when a teammate's agent sends it a request through Agent Hub.",
+  "version": "0.3.2",
+  "publisher": "theagenthub",
+  "license": "MIT",
+  "homepage": "https://theagenthub.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hyorman/agenthub-plugins.git",
+    "directory": "roo"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Agent Hub",
+      "properties": {
+        "agenthub.command": {
+          "type": "string",
+          "default": "",
+          "description": "The agenthub CLI. Empty: agenthub on PATH, else ~/.local/bin/agenthub."
+        }
+      }
+    }
+  }
+}

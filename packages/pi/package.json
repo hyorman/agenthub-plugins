@@ -1,6 +1,6 @@
 {
   "name": "@theagenthub/pi",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Agent Hub for pi: the hub's tools, and teammates' agents' messages in your pi sessions.",
   "type": "module",
   "keywords": [

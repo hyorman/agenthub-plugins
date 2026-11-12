@@ -124,11 +124,23 @@ async function setup(ctx) {
   if (!ctx?.session?.hook || !ctx.tool?.hook || !ctx.event?.subscribe) return;
   const directory = ctx.location?.directory ?? process.cwd();
   const started = new Set();
+  const waiting = new Map();
   let presence = Promise.resolve();
+  const wake = async (sessionID) => {
+    if (typeof ctx.session.synthetic !== "function") return;
+    const text = await waitForMessage(sessionID, directory, waiting);
+    if (!text) return;
+    try {
+      await ctx.session.synthetic({ sessionID, text, description: "Agent Hub: new message", delivery: "queue", resume: true });
+    } catch {
+      /* the session is gone, or busy again */
+    }
+  };
   const wrap = (text) => "\n\n<agenthub>\n" + text + "\n</agenthub>";
 
   // V2 has no hidden message parts, so the notice is appended to the prompt's text.
   await ctx.session.hook("prompt", async (event) => {
+    waiting.get(event.sessionID)?.kill();
     const first = !started.has(event.sessionID);
     started.add(event.sessionID);
     const text = await notify(first ? "session-start" : "prompt", event.sessionID, directory);
@@ -148,11 +160,21 @@ async function setup(ctx) {
       const sessionID = event.data?.sessionID;
       if (!sessionID) continue;
       const kind = event.type === "session.deleted" ? "session-end" : "stop";
-      if (kind === "session-end") started.delete(sessionID);
+      if (kind === "session-end") {
+        started.delete(sessionID);
+        waiting.get(sessionID)?.kill();
+      }
       presence = presence.then(() => notify(kind, sessionID, directory));
+      // A finished run (not one the user interrupted) waits for a hub message; not awaited.
+      if (event.type === "session.execution.succeeded" || event.type === "session.execution.failed") {
+        presence.then(() => wake(sessionID)).catch(() => {});
+      }
     }
   })().catch(() => {});
-  return () => controller.abort();
+  return () => {
+    controller.abort();
+    for (const child of waiting.values()) child.kill();
+  };
 }
 
 export default { id: "agenthub", server: AgentHub, setup };

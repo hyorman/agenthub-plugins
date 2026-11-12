@@ -1,6 +1,6 @@
 {
   "name": "@theagenthub/opencode",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Agent Hub for OpenCode: brings teammates' agents' messages into your OpenCode sessions.",
   "type": "module",
   "main": "index.js",
