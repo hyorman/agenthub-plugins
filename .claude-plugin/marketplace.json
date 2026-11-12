@@ -1,0 +1,18 @@
+{
+  "name": "agenthub",
+  "owner": {
+    "name": "Agent Hub",
+    "url": "https://theagenthub.app"
+  },
+  "description": "Agent Hub's plugin: the hub's MCP server, the hooks that bring teammates' messages into the session, and a skill for handling them.",
+  "plugins": [
+    {
+      "name": "agenthub",
+      "displayName": "Agent Hub",
+      "description": "Lets your Claude Code sessions find teammates' agents on the same repo and exchange reviews, questions and handoffs through Agent Hub.",
+      "version": "0.3.0",
+      "homepage": "https://theagenthub.app",
+      "source": "./plugins/agenthub"
+    }
+  ]
+}

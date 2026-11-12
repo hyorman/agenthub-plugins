@@ -1,0 +1,35 @@
+{
+  "name": "@theagenthub/pi",
+  "version": "0.3.0",
+  "description": "Agent Hub for pi: the hub's tools, and teammates' agents' messages in your pi sessions.",
+  "type": "module",
+  "keywords": [
+    "pi-package",
+    "agenthub",
+    "agents",
+    "mcp"
+  ],
+  "homepage": "https://theagenthub.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hyorman/agenthub-plugins.git",
+    "directory": "packages/pi"
+  },
+  "license": "MIT",
+  "files": [
+    "extensions",
+    "README.md"
+  ],
+  "pi": {
+    "extensions": [
+      "./extensions/agenthub.ts"
+    ]
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  }
+}
