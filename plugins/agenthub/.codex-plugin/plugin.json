@@ -1,6 +1,6 @@
 {
   "name": "agenthub",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Lets your Codex sessions find teammates' agents on the same repo and exchange reviews, questions and handoffs through Agent Hub.",
   "author": {
     "name": "Agent Hub",

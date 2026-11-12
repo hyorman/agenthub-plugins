@@ -3,12 +3,17 @@
 # background the first time, if the plugin's auto_install option allows) and hands the hook's
 # JSON to `agenthub notify`, which prints what's new on the hub for this session.
 #
-#   sh hook.sh [claude-code|codex]     the harness running it, for notify's output format
+#   sh hook.sh [claude-code|codex]        the harness running it, for notify's output format
+#   sh hook.sh claude-code wait           the background Stop hook (asyncRewake): runs `agenthub wait`,
+#                                         which exits 2 with the summaries when a message should wake
+#                                         the idle session
 #
-# A hook must never get in the way of the session, so every path here exits 0.
+# A hook must never get in the way of the session, so every path here exits 0, except the
+# wait hook passing on a wake.
 
 harness="${1:-claude-code}"
 case "$harness" in claude-code | codex) ;; *) harness=claude-code ;; esac
+mode="${2:-notify}"
 input="$(cat)"
 event="$(printf '%s' "$input" | sed -n 's/.*"hook_event_name"[[:space:]]*:[[:space:]]*"\([A-Za-z]*\)".*/\1/p' | head -n 1)"
 # Claude Code sets CLAUDE_PLUGIN_DATA; Codex sets PLUGIN_DATA (and the CLAUDE_ name too).
@@ -76,6 +81,19 @@ if [ "$event" = SessionStart ]; then
       export AGENTHUB_NO_UPDATE_CHECK
       ;;
   esac
+fi
+
+if [ "$mode" = wait ]; then
+  case "${CLAUDE_PLUGIN_OPTION_WAKE_WHEN_IDLE:-true}" in false | 0) exit 0 ;; esac
+  # Only a wake with something to say exits 2: a CLI too old to know `wait` also exits 2,
+  # with its usage on stderr and nothing on stdout, and that must not wake the session.
+  out="$(printf '%s' "$input" | "$agenthub" wait --max 43200 2>/dev/null)"
+  code=$?
+  if [ "$code" -eq 2 ] && [ -n "$out" ]; then
+    printf '%s\n' "$out"
+    exit 2
+  fi
+  exit 0
 fi
 
 printf '%s' "$input" | "$agenthub" notify --format "$harness" 2>/dev/null

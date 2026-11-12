@@ -8,6 +8,10 @@
  * model as a hidden message), after tool calls (appended to the tool's result), when a run
  * ends (idle) and when the session closes (offline).
  *
+ * When a run ends it also runs `agenthub wait`, and if a hub message arrives while pi is
+ * idle, it sends the summaries as a message that starts a turn (`triggerTurn`), so the
+ * agent answers without waiting for the user. The next prompt stops the waiter.
+ *
  * Every failure is quiet: a missing CLI, a signed-out user or an unreachable hub never
  * breaks a pi session.
  */
@@ -61,6 +65,26 @@ function notify(event: string, sessionId: string | undefined, cwd: string): Prom
   return run(["notify", "--format", "text", "--event", event], JSON.stringify({ session_id: sessionId, cwd }), cwd);
 }
 
+/** Runs `agenthub wait` until a message should wake the session; resolves to its text, or "". */
+function waitForMessage(sessionId: string | undefined, cwd: string, onChild: (c: ReturnType<typeof spawn>) => void): Promise<string> {
+  return new Promise((resolve) => {
+    let out = "";
+    let child: ReturnType<typeof spawn>;
+    try {
+      child = spawn(command(), ["wait"], { cwd, stdio: ["pipe", "pipe", "ignore"], windowsHide: true, shell: process.platform === "win32" });
+    } catch {
+      return resolve("");
+    }
+    onChild(child);
+    child.stdout!.on("data", (c) => (out += c));
+    child.on("error", () => resolve(""));
+    // An agenthub too old to know `wait` exits 2 too, but prints nothing on stdout.
+    child.on("close", (code) => resolve(code === 2 ? out.trim() : ""));
+    child.stdin!.on("error", () => {});
+    child.stdin!.end(JSON.stringify({ session_id: sessionId, cwd }));
+  });
+}
+
 interface Token {
   hub: string;
   token: string;
@@ -75,6 +99,11 @@ export default function agenthub(pi: ExtensionAPI) {
   let token: Token | undefined;
   let client: Client | undefined;
   let registered = false;
+  let waiter: ReturnType<typeof spawn> | undefined;
+  const stopWaiting = () => {
+    waiter?.kill();
+    waiter = undefined;
+  };
 
   async function freshToken(): Promise<Token | undefined> {
     if (token && (!token.expires_at || token.expires_at - 60_000 > Date.now())) return token;
@@ -159,6 +188,7 @@ export default function agenthub(pi: ExtensionAPI) {
   });
 
   pi.on("before_agent_start", async () => {
+    stopWaiting();
     const text = await notify(started ? "prompt" : "session-start", sessionId, cwd);
     started = true;
     if (!text) return;
@@ -175,9 +205,19 @@ export default function agenthub(pi: ExtensionAPI) {
   // Presence doesn't hold pi up, but goes one at a time so "offline" can't be overtaken.
   pi.on("agent_end", async () => {
     presence = presence.then(() => notify("stop", sessionId, cwd));
+    // Not awaited: it waits for as long as pi is idle.
+    void presence.then(async () => {
+      stopWaiting();
+      let mine: ReturnType<typeof spawn> | undefined;
+      const text = await waitForMessage(sessionId, cwd, (c) => (waiter = mine = c));
+      if (waiter === mine) waiter = undefined;
+      if (!text) return;
+      pi.sendMessage({ customType: "agenthub", content: text, display: true }, { triggerTurn: true, deliverAs: "followUp" });
+    }).catch(() => {});
   });
 
   pi.on("session_shutdown", async () => {
+    stopWaiting();
     presence = presence.then(() => notify("session-end", sessionId, cwd));
     await presence;
     await client?.close().catch(() => {});

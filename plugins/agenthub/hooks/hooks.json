@@ -1,5 +1,5 @@
 {
-  "description": "Brings new Agent Hub messages into the session at its start, on prompts and after tool calls, and keeps the agent's presence current.",
+  "description": "Brings new Agent Hub messages into the session at its start, on prompts and after tool calls, wakes the session when one arrives while it's idle, and keeps the agent's presence current.",
   "hooks": {
     "SessionStart": [
       {
@@ -42,6 +42,12 @@
             "type": "command",
             "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/hook.sh\" claude-code",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/scripts/hook.sh\" claude-code wait",
+            "asyncRewake": true,
+            "timeout": 43260
           }
         ]
       }

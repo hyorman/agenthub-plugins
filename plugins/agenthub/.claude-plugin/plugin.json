@@ -1,7 +1,7 @@
 {
   "name": "agenthub",
   "displayName": "Agent Hub",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Lets your Claude Code sessions find teammates' agents on the same repo and exchange reviews, questions and handoffs through Agent Hub.",
   "author": {
     "name": "Agent Hub",
@@ -35,6 +35,12 @@
       "title": "Keep the agenthub CLI up to date",
       "description": "Run agenthub update in the background when a session starts and a newer release is out.",
       "default": false
+    },
+    "wake_when_idle": {
+      "type": "boolean",
+      "title": "Wake idle sessions for hub messages",
+      "description": "When a teammate's agent sends this session a request while it waits for you, start a turn so it can answer or review (read-only) right away. fyi broadcasts never wake it.",
+      "default": true
     }
   }
 }

@@ -44,15 +44,52 @@ function notify(event, sessionID, cwd) {
   });
 }
 
+/** Runs `agenthub wait`; resolves to the text to wake the session with, or "" when it shouldn't. */
+function waitForMessage(sessionID, cwd, children) {
+  return new Promise((resolve) => {
+    let out = "";
+    let child;
+    try {
+      child = spawn(COMMAND, ["wait"], { cwd, stdio: ["pipe", "pipe", "ignore"], windowsHide: true, shell: process.platform === "win32" });
+    } catch {
+      return resolve("");
+    }
+    children.get(sessionID)?.kill();
+    children.set(sessionID, child);
+    child.stdout.on("data", (chunk) => (out += chunk));
+    child.on("error", () => resolve(""));
+    child.on("close", (code) => {
+      if (children.get(sessionID) === child) children.delete(sessionID);
+      // An agenthub too old to know `wait` exits 2 too, but prints nothing on stdout.
+      resolve(code === 2 ? out.trim() : "");
+    });
+    child.stdin.on("error", () => {});
+    child.stdin.end(JSON.stringify({ session_id: sessionID, cwd }));
+  });
+}
+
 function partId() {
   return "prt_" + Date.now().toString(16) + Math.random().toString(36).slice(2, 12);
 }
 
-export const AgentHub = async ({ directory }) => {
+export const AgentHub = async ({ directory, client }) => {
   const started = new Set();
+  const waiting = new Map();
   let presence = Promise.resolve();
+  const wake = async (sessionID) => {
+    const send = client?.session?.promptAsync ?? client?.session?.prompt;
+    if (!send) return;
+    const text = await waitForMessage(sessionID, directory, waiting);
+    if (!text) return;
+    try {
+      await send.call(client.session, { path: { id: sessionID }, body: { parts: [{ type: "text", text }] } });
+    } catch {
+      /* the session is gone, or busy again */
+    }
+  };
   return {
     "chat.message": async (input, output) => {
+      waiting.get(input.sessionID)?.kill();
       const first = !started.has(input.sessionID);
       started.add(input.sessionID);
       const text = await notify(first ? "session-start" : "prompt", input.sessionID, directory);
@@ -67,8 +104,15 @@ export const AgentHub = async ({ directory }) => {
     // Presence updates don't block OpenCode, but run one at a time so "offline" can't be
     // overtaken by an earlier "idle".
     event: async ({ event }) => {
-      if (event.type === "session.idle") presence = presence.then(() => notify("stop", event.properties.sessionID, directory));
-      else if (event.type === "session.deleted") presence = presence.then(() => notify("session-end", event.properties.info.id, directory));
+      if (event.type === "session.idle") {
+        const sessionID = event.properties.sessionID;
+        presence = presence.then(() => notify("stop", sessionID, directory));
+        // Not awaited: it waits as long as the session is idle.
+        presence.then(() => wake(sessionID)).catch(() => {});
+      } else if (event.type === "session.deleted") {
+        waiting.get(event.properties.info.id)?.kill();
+        presence = presence.then(() => notify("session-end", event.properties.info.id, directory));
+      }
     },
   };
 };

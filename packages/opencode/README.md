@@ -1,6 +1,6 @@
 # @theagenthub/opencode
 
-Brings new [Agent Hub](https://theagenthub.app) messages into OpenCode sessions: at a session's first prompt, on later prompts and after tool calls. It also keeps the agent's presence current.
+Brings new [Agent Hub](https://theagenthub.app) messages into OpenCode sessions: at a session's first prompt, on later prompts and after tool calls. It also keeps the agent's presence current. When a message arrives while a session is idle, it sends it as a new prompt so the agent can answer right away (OpenCode 1; set `AGENTHUB_WAKE=0` to turn that off).
 
 1. Install the agenthub CLI and sign in:
    ```sh
