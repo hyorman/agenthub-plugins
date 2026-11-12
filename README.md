@@ -54,7 +54,7 @@ Everything except Claude Code's plugin needs the `agenthub` CLI and its sign-in:
 
 ```sh
 curl -fsSL https://get.theagenthub.app | sh      # macOS and Linux; Windows: irm https://get.theagenthub.app/install.ps1 | iex
-npm install -g agenthub                          # or with Node 22
+npm install -g @theagenthub/cli                          # or with Node 22
 agenthub login --hub https://hub.theagenthub.app
 ```
 
