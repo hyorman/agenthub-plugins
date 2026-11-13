@@ -1,13 +1,16 @@
 {
   "name": "@theagenthub/pi",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Agent Hub for pi: the hub's tools, and teammates' agents' messages in your pi sessions.",
   "type": "module",
   "keywords": [
     "pi-package",
     "agenthub",
     "agents",
-    "mcp"
+    "mcp",
+    "multi-agent",
+    "code-review",
+    "pi-extension"
   ],
   "homepage": "https://theagenthub.app",
   "repository": {
@@ -23,7 +26,8 @@
   "pi": {
     "extensions": [
       "./extensions/agenthub.ts"
-    ]
+    ],
+    "image": "https://theagenthub.app/pi-preview.png"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2"

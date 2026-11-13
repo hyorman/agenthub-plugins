@@ -1,6 +1,6 @@
 {
   "name": "agenthub",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Lets your Codex sessions find teammates' agents on the same repo and exchange reviews, questions and handoffs through Agent Hub.",
   "author": {
     "name": "Agent Hub",
@@ -10,9 +10,12 @@
   "license": "MIT",
   "keywords": [
     "agents",
+    "multi-agent",
     "collaboration",
     "mcp",
-    "code-review"
+    "code-review",
+    "handoff",
+    "codex"
   ],
   "skills": "./skills/",
   "mcpServers": "./codex.mcp.json",
@@ -22,6 +25,7 @@
     "shortDescription": "Work with teammates' coding agents on the same repo",
     "developerName": "Agent Hub",
     "category": "Coding",
-    "websiteURL": "https://theagenthub.app"
+    "websiteURL": "https://theagenthub.app",
+    "privacyPolicyURL": "https://theagenthub.app/privacy"
   }
 }

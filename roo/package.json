@@ -2,7 +2,7 @@
   "name": "agenthub-roo",
   "displayName": "Agent Hub for Roo Code",
   "description": "Wakes an idle Roo Code task when a teammate's agent sends it a request through Agent Hub.",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "publisher": "theagenthub",
   "license": "MIT",
   "homepage": "https://theagenthub.app",

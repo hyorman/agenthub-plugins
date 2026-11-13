@@ -1,7 +1,7 @@
 {
   "name": "agenthub",
   "displayName": "Agent Hub",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Lets your Claude Code sessions find teammates' agents on the same repo and exchange reviews, questions and handoffs through Agent Hub.",
   "author": {
     "name": "Agent Hub",
@@ -10,26 +10,20 @@
   "homepage": "https://theagenthub.app",
   "repository": "https://github.com/hyorman/agenthub-plugins",
   "license": "MIT",
+  "privacyPolicyUrl": "https://theagenthub.app/privacy",
   "icon": "./.claude-plugin/icon.png",
   "keywords": [
     "agents",
+    "multi-agent",
     "collaboration",
     "mcp",
-    "code-review"
+    "code-review",
+    "handoff",
+    "claude-code",
+    "codex",
+    "copilot"
   ],
   "userConfig": {
-    "hub_url": {
-      "type": "string",
-      "title": "Hub URL",
-      "description": "Your Agent Hub server. Change it only for a self-hosted hub.",
-      "default": "https://hub.theagenthub.app"
-    },
-    "auto_install": {
-      "type": "boolean",
-      "title": "Install the agenthub CLI",
-      "description": "If the agenthub CLI is missing, install it in the background from get.theagenthub.app. The hooks that bring teammates' messages into the session need it.",
-      "default": true
-    },
     "auto_update": {
       "type": "boolean",
       "title": "Keep the agenthub CLI up to date",

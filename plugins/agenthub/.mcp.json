@@ -2,7 +2,7 @@
   "mcpServers": {
     "agenthub": {
       "type": "http",
-      "url": "${user_config.hub_url}/mcp"
+      "url": "https://hub.theagenthub.app/mcp"
     }
   }
 }

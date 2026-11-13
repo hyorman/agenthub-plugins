@@ -1,7 +1,8 @@
 #!/bin/sh
-# Every hook of the Agent Hub plugin runs this. It finds the agenthub CLI (installing it in the
-# background the first time, if the plugin's auto_install option allows) and hands the hook's
-# JSON to `agenthub notify`, which prints what's new on the hub for this session.
+# Every hook of the Agent Hub plugin runs this. It finds the agenthub CLI and hands the hook's
+# JSON to `agenthub notify`, which prints what's new on the hub for this session. It installs
+# nothing and reads no harness settings: the CLI does that (`notify --plugin` steps aside when
+# `agenthub hooks install` hooks are already there).
 #
 #   sh hook.sh [claude-code|codex]        the harness running it, for notify's output format
 #   sh hook.sh claude-code wait           the background Stop hook (asyncRewake): runs `agenthub wait`,
@@ -18,30 +19,7 @@ input="$(cat)"
 event="$(printf '%s' "$input" | sed -n 's/.*"hook_event_name"[[:space:]]*:[[:space:]]*"\([A-Za-z]*\)".*/\1/p' | head -n 1)"
 # Claude Code sets CLAUDE_PLUGIN_DATA; Codex sets PLUGIN_DATA (and the CLAUDE_ name too).
 data="${CLAUDE_PLUGIN_DATA:-${PLUGIN_DATA:-${TMPDIR:-/tmp}/agenthub-plugin}}"
-download="${AGENTHUB_DOWNLOAD_URL:-https://get.theagenthub.app}"
-
-# The MCP server and the hooks talk to the same hub: the plugin's hub_url option.
-if [ -z "${AGENTHUB_URL:-}" ] && [ -n "${CLAUDE_PLUGIN_OPTION_HUB_URL:-}" ]; then
-  AGENTHUB_URL="${CLAUDE_PLUGIN_OPTION_HUB_URL%/}"
-  export AGENTHUB_URL
-fi
 hub="${AGENTHUB_URL:-https://hub.theagenthub.app}"
-
-# Hooks from `agenthub hooks install <harness>` do the same job; let them, so nothing shows twice.
-project="${CLAUDE_PROJECT_DIR:-$PWD}"
-if [ "$harness" = codex ]; then
-  set -- "${CODEX_HOME:-$HOME/.codex}/hooks.json" "$project/.codex/hooks.json"
-else
-  set -- "$HOME/.claude/settings.json" "$project/.claude/settings.local.json" "$project/.claude/settings.json"
-fi
-for f in "$@"; do
-  if [ -f "$f" ] && grep -q 'agenthub[^"]* notify' "$f" 2>/dev/null; then
-    if [ "$event" = SessionStart ]; then
-      echo "Agent Hub: $f also runs agenthub notify, so the agenthub plugin's hooks stay out of the way. To use only the plugin, ask the user to run \`agenthub hooks uninstall $harness\` (with --scope project for a repo's settings)."
-    fi
-    exit 0
-  fi
-done
 
 agenthub=""
 if command -v agenthub >/dev/null 2>&1; then
@@ -53,21 +31,8 @@ else
 fi
 
 if [ -z "$agenthub" ]; then
-  [ "$event" = SessionStart ] || exit 0
-  case "${CLAUDE_PLUGIN_OPTION_AUTO_INSTALL:-true}" in false | 0) exit 0 ;; esac
-  mkdir -p "$data" 2>/dev/null || exit 0
-  lock="$data/install.lock"
-  # A lock older than 10 minutes is from an install that died.
-  if [ -d "$lock" ] && [ -n "$(find "$lock" -maxdepth 0 -mmin +10 2>/dev/null)" ]; then rmdir "$lock" 2>/dev/null; fi
-  if mkdir "$lock" 2>/dev/null; then
-    # The download is large, so it runs on after this hook returns; the next session uses it.
-    (
-      if command -v curl >/dev/null 2>&1; then curl -fsSL --proto '=https' --tlsv1.2 "$download" | sh
-      else wget -q --https-only -O - "$download" | sh
-      fi
-      rmdir "$lock"
-    ) >"$data/install.log" 2>&1 </dev/null &
-    echo "Agent Hub: the agenthub CLI isn't installed yet, so the plugin is installing it in the background (log: $data/install.log). Teammates' messages appear here from the next session on. The agenthub MCP tools work already. Once it's installed the user signs in once with \`agenthub login --hub $hub\`."
+  if [ "$event" = SessionStart ]; then
+    echo "Agent Hub: the agenthub CLI isn't installed, so teammates' messages won't show in this session. The agenthub MCP tools work already. To get the messages, ask the user to install the CLI (https://theagenthub.app/#start) and sign it in once with \`agenthub login --hub $hub\`."
   fi
   exit 0
 fi
@@ -87,7 +52,7 @@ if [ "$mode" = wait ]; then
   case "${CLAUDE_PLUGIN_OPTION_WAKE_WHEN_IDLE:-true}" in false | 0) exit 0 ;; esac
   # Only a wake with something to say exits 2: a CLI too old to know `wait` also exits 2,
   # with its usage on stderr and nothing on stdout, and that must not wake the session.
-  out="$(printf '%s' "$input" | "$agenthub" wait --max 43200 2>/dev/null)"
+  out="$(printf '%s' "$input" | "$agenthub" wait --max 43200 --plugin 2>/dev/null)"
   code=$?
   if [ "$code" -eq 2 ] && [ -n "$out" ]; then
     printf '%s\n' "$out"
@@ -96,5 +61,5 @@ if [ "$mode" = wait ]; then
   exit 0
 fi
 
-printf '%s' "$input" | "$agenthub" notify --format "$harness" 2>/dev/null
+printf '%s' "$input" | "$agenthub" notify --format "$harness" --plugin 2>/dev/null
 exit 0
